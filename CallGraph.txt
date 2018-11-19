@@ -1,0 +1,44 @@
+$requestBody = Get-Content $req -Raw | ConvertFrom-Json
+
+$username = "amrishi@hashwaves.onmicrosoft.com";
+$password = $env:PW;
+$client_id = "ff606d8d-d693-4008-8b0c-5c17f14ea7c0";
+$client_secret = $env:CS;
+$tenant_id = "f9032d9f-44f6-43a1-bda1-79fe32347855";
+$resource = "https://graph.microsoft.com";
+
+# grant_type = password
+
+$authority = "https://login.microsoftonline.com/$tenant_id";
+$tokenEndpointUri = "$authority/oauth2/token";
+$content = "grant_type=password&username=$username&password=$password&client_id=$client_id&client_secret=$client_secret&resource=$resource";
+
+$response = Invoke-WebRequest -Uri $tokenEndpointUri -Body $content -Method Post -UseBasicParsing
+$responseBody = $response.Content | ConvertFrom-JSON
+$responseBody
+$responseBody.access_token
+
+Out-File -Encoding Ascii -FilePath $res -inputObject $responseBody
+
+$access_token = $responseBody.access_token
+
+# GET https://graph.microsoft.io/en-us/docs/api-reference/v1.0/api/group_list
+$body = Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/groups" -Headers @{"Authorization" = "Bearer $access_token"}
+$body | ConvertTo-JSON
+
+Out-File -Encoding Ascii -FilePath $res -inputObject $body
+
+# POST - this creates groups https://graph.microsoft.io/en-us/docs/api-reference/v1.0/api/group_post_groups
+#$body = @{"displayName"="ps-blog1"; "mailEnabled"=$false; "groupTypes"=@("Unified"); "securityEnabled"=$false; "mailNickname"="ps11" } | ConvertTo-Json 
+#$body = Invoke-RestMethod `
+    #-Uri "https://graph.microsoft.com/v1.0/groups" `
+    #-Headers @{"Authorization" = "Bearer $access_token"} `
+    #-Body $body `
+    #-ContentType "application/json" `
+    #-Method POST
+#$body | ConvertTo-JSON
+
+#Out-File -Encoding Ascii -FilePath $res -inputObject $body
+
+$ExtractCSV = Import-Csv "D:\home\data\Config\Extract.csv"
+$ExtractCSV
